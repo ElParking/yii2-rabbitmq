@@ -9,6 +9,7 @@ use mikemadisonweb\rabbitmq\exceptions\InvalidConfigException;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPLazyConnection;
 use PhpAmqpLib\Connection\AMQPSSLConnection;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Yii;
 use yii\base\Component;
 use yii\di\NotInstantiableException;
@@ -278,10 +279,12 @@ class Configuration extends Component
                 throw new InvalidConfigException('Connection type should be a subclass of PhpAmqpLib\Connection\AbstractConnection.');
             }
             if (!empty($connection['ssl_context']) && empty($connection['type'])) {
-                throw new InvalidConfigException('If you are using a ssl connection, the connection type must be AMQPSSLConnection::class');
+                throw new InvalidConfigException('If you are using a ssl connection, the connection type must be AMQPSSLConnection::class or AMQPStreamConnection::class');
             }
-            if (!empty($connection['ssl_context']) && $connection['type'] !== AMQPSSLConnection::class) {
-                throw new InvalidConfigException('If you are using a ssl connection, the connection type must be AMQPSSLConnection::class');
+            if (!empty($connection['ssl_context']) && 
+                $connection['type'] !== AMQPSSLConnection::class && 
+                $connection['type'] !== AMQPStreamConnection::class) {
+                throw new InvalidConfigException('If you are using a ssl connection, the connection type must be AMQPSSLConnection::class or AMQPStreamConnection::class');
             }
         }
 

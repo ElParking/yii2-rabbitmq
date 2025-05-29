@@ -3,6 +3,7 @@
 namespace mikemadisonweb\rabbitmq\components;
 
 use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 
 class AbstractConnectionFactory
 {
@@ -29,6 +30,36 @@ class AbstractConnectionFactory
      */
     public function createConnection() : AbstractConnection
     {
+        // Para AMQPStreamConnection, el ssl_context va como parámetro $context (12º parámetro)
+        if ($this->_class === AMQPStreamConnection::class) {
+            $context = null;
+            if ($this->_parameters['ssl_context'] !== null && is_array($this->_parameters['ssl_context'])) {
+                // Crear contexto de stream a partir del array ssl_context
+                $context = stream_context_create([
+                    'ssl' => $this->_parameters['ssl_context']
+                ]);
+            }
+            
+            return new $this->_class(
+                $this->_parameters['host'],
+                $this->_parameters['port'],
+                $this->_parameters['user'],
+                $this->_parameters['password'],
+                $this->_parameters['vhost'],
+                false,      // insist
+                'AMQPLAIN', // login_method
+                null,       // login_response
+                'en_US',    // locale
+                $this->_parameters['connection_timeout'],
+                $this->_parameters['read_write_timeout'],
+                $context, // context (12º parámetro)
+                $this->_parameters['keepalive'],
+                $this->_parameters['heartbeat'],
+                $this->_parameters['channel_rpc_timeout']
+            );
+        }
+        
+        // Para otras conexiones (como AMQPSSLConnection), mantener el comportamiento original
         if ($this->_parameters['ssl_context'] !== null) {
             return new $this->_class(
                 $this->_parameters['host'],
